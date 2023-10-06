@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta property="og:title" content="frENS Tile Matching Game">
+<meta property="og:description" content="Test your memory and matching skills with the frENS Tile Matching Game. Find pairs, beat the clock, and enjoy the challenge!">
+<meta property="og:url" content="https://github.com/ensracer/frensmatch">
+<meta property="og:image" content="https://github.com/ensracer/frensmatch/frensmatch.jpg">
+<title>Play the frENS Tile Matching Game - Challenge Your Memory!</title>
+<meta name="description" content="Join the fun with the frENS Tile Matching Game. How quickly can you discover and match frENS pairs? Test your memory and agility now!">
+<link rel="canonical" href="https://github.com/ensracer/frensmatch">
+<meta property="og:image" content="https://github.com/ensracer/frensmatch/frensmatch.jpg">
+
+  <script>
+    document.addEventListener('contextmenu', function(event) {
+      event.preventDefault();
+    });
+    // Disable console
+    Object.defineProperty(window, 'console', {
+      value: {
+        log: function() {},
+        debug: function() {},
+        info: function() {},
+        warn: function() {},
+        error: function() {}
+      },
+      writable: false,
+      configurable: false
+    });
+  </script>
+
+  <title>Card Matching Game</title>
+  <style>
+
+  body {
+          background-color: #f0f0f0;
+          font-family: Helvetica;
+  }
+  #game {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+
+    }
+    #game-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr); /* Add this line to specify 3 rows */
+      gap: 10px;
+    }
+    .card {
+      width: 130px;
+      height: 130px;
+      background-color: #000;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.5s;
+    }
+    .card img {
+      width: 130px;
+      height: 130px;
+      border-radius: 10px;
+      display: none;
+    }
+
+      #restart-button {
+      padding: 10px; /* Add padding to the button */
+      background-color: #0077cc; /* Button background color */
+      color: #fff; /* Button text color */
+      border: none; /* Remove button border */
+      border-radius: 5px; /* Add button border radius */
+      cursor: pointer;
+      transition: background-color 0.3s;
+      text-align:center;
+      margin:auto;
+      width:350px;
+    }
+    #restart-button:hover {
+      background-color: #0055aa; /* Button background color on hover */
+    }
+    #timer {
+      margin-top: 10px; /* Add space between the button and the timer */
+      text-align:center;
+      margin-bottom:-50px;
+    }
+
+    h2 {
+      text-align:center;
+    }
+
+    #button-container {
+     display:block;
+     width:350px;
+     margin:auto;
+    }
+
+        /* Media query for mobile devices */
+    @media (max-width: 768px) {
+      #game-container {
+        grid-template-columns: repeat(4, 1fr); /* Two columns for smaller screens */
+        grid-template-rows: repeat(3, 1fr); /* Six rows for smaller screens */
+      }
+      .card {
+        width: 100px; /* Adjust card size for smaller screens */
+        height: 100px;
+      }
+      .card img {
+        width: 100px;
+        height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="button-container">
+  <h2>frENS Tile Matching Game</h2>
+    <button id="restart-button">Restart Game</button>
+      <div id="timer">Time: 0</div>
+  </div>
+<div id="game">
+  <div id="game-container"></div>
+
+  <script>
+    const cardPairs = 8; // Specify the number of card pairs here
+    const cards = [];
+    let openCards = [];
+    let matchedPairs = 0;
+    let moves = 0;
+    let timer = 0;
+    let timerInterval;
+
+    function createCard(imageUrl) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.onclick = () => flipCard(card, imageUrl);
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.display = 'none';
+      card.appendChild(img);
+      return card;
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generateCardImages() {
+      const cardImages = [];
+      for (let i = 1; i <= cardPairs; i++) {
+        cardImages.push(`${i}.webp`, `${i}.webp`);
+      }
+      return shuffleArray(cardImages);
+    }
+
+    function generateCards() {
+      const shuffledImages = generateCardImages();
+      shuffledImages.forEach(imageUrl => {
+        const card = createCard(imageUrl);
+        cards.push(card);
+      });
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timer++;
+        document.getElementById('timer').textContent = `Time: ${timer}`;
+      }, 1000);
+    }
+
+    function restartGame() {
+      clearInterval(timerInterval);
+      timer = 0;
+      moves = 0;
+      matchedPairs = 0;
+      openCards = [];
+
+      // Shuffle the cards, including pairs
+      shuffleArray(cards);
+
+      const gameContainer = document.getElementById("game-container");
+      gameContainer.innerHTML = "";
+
+      cards.forEach(card => {
+        const img = card.querySelector("img");
+        img.style.display = "none";
+        card.classList.remove("open");
+        gameContainer.appendChild(card);
+      });
+
+      document.getElementById("timer").textContent = "Time: 0";
+      startTimer();
+    }
+
+    function flipCard(card, imageUrl) {
+      if (openCards.length < 2 && !card.classList.contains('open')) {
+        card.classList.add('open');
+        card.querySelector('img').style.display = 'block';
+        openCards.push({ card, imageUrl });
+
+        if (openCards.length === 2) {
+          setTimeout(checkMatch, 500);
+        }
+      }
+    }
+
+    function checkMatch() {
+      const card1 = openCards[0].imageUrl;
+      const card2 = openCards[1].imageUrl;
+
+      if (card1 === card2) {
+        matchedPairs++;
+        openCards = [];
+
+        if (matchedPairs === cardPairs) {
+          clearInterval(timerInterval);
+          alert(`Congratulations! You won in ${timer} seconds`);
+        }
+      } else {
+        openCards.forEach(card => {
+          card.card.classList.remove('open');
+          card.card.querySelector('img').style.display = 'none';
+        });
+        openCards = [];
+      }
+    }
+
+    generateCards();
+    restartGame(); // Start the game initially
+
+    // Restart button event listener
+    const restartButton = document.getElementById("restart-button");
+    restartButton.addEventListener("click", restartGame);
+  </script>
+  </div>
+</body>
+</html>
